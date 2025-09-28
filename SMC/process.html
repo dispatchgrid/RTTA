@@ -245,7 +245,7 @@
     let absentTeachers = [];
     const ignoreSubjects = exceptionStrings;
     const ignoreClasses = exceptionStrings
-    const lockedTeachers = [45, 104];
+    const lockedTeachers = [81,80,146,19];
 
 
 
@@ -258,7 +258,11 @@
     } catch (e) {
         console.error('Invalid absent parameter:', rawAbsent);
     }
-    console.log(absentTeachers);
+    absentTeachers=removeDuplicates(absentTeachers);
+
+    function removeDuplicates(arr) {
+        return [...new Set(arr)];
+    }
 
 </script>
 <script>
