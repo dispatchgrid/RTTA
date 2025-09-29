@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RTTASMC Parameter Editor</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+    h1 {
+      color: #00bcd4;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #333;
+      text-align: left;
+    }
+    input {
+      background-color: #1e1e1e;
+      color: #fff;
+      border: 1px solid #555;
+      padding: 5px;
+      width: 100%;
+    }
+    button {
+      background-color: #00bcd4;
+      color: #000;
+      border: none;
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0097a7;
+    }
+  </style>
+</head>
+<body>
+<h1>🛠️ RTTASMC Parameter Editor</h1>
+<table id="paramsTable">
+  <thead>
+  <tr><th>ID</th><th>Name</th><th>Value</th><th>Save</th></tr>
+  </thead>
+  <tbody></tbody>
+</table>
+<script src="script.js"></script>
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  const tableBody = document.querySelector('#paramsTable tbody');
+
+  async function loadParams() {
+    const { data, error } = await supabase.from('rttasmcparams').select('*');
+    if (error) {
+      console.error('Error loading data:', error);
+      return;
+    }
+
+    tableBody.innerHTML = '';
+    data.forEach(row => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+          <td>${row.id}</td>
+          <td><input type="text" value="${row.name}" /></td>
+          <td><input type="text" value="${row.value ?? ''}" /></td>
+          <td><button onclick="saveRow(${row.id}, this)">💾</button></td>
+        `;
+      tableBody.appendChild(tr);
+    });
+  }
+
+  window.saveRow = async function(id, btn) {
+    const tr = btn.closest('tr');
+    const name = tr.children[1].querySelector('input').value;
+    const value = tr.children[2].querySelector('input').value;
+
+    const { error } = await supabase
+            .from('rttasmcparams')
+            .update({ name, value })
+            .eq('id', id);
+
+    if (error) {
+      alert('❌ Failed to save');
+      console.error(error);
+    } else {
+      btn.textContent = '✅';
+      setTimeout(() => (btn.textContent = '💾'), 1000);
+    }
+  };
+
+  loadParams();
+</script>
+</body>
+</html>
