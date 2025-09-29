@@ -1,12 +1,18 @@
 /* Dark theme base */
 
 body {
-    background-color: #121212 !important;
-    color: white !important;
+    background-color: #0a0a0a !important;
+    background-image:url('/res/background.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+    color: #e0e0e0 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+
     height: 100vh !important;
     display: flex !important;
     flex-direction: column !important;
-    font-family: 'Poppins', sans-serif !important;
+
     padding: 0px !important;
 }
 
@@ -16,7 +22,7 @@ body {
 
 /* Container animation */
 .container {
-   
+
     animation: fadeIn 0.8s ease-in-out !important;
     margin-top: 10px !important;
 
@@ -59,12 +65,12 @@ textarea {
 }
 
 
- .table-container {
-     max-height: 35vh;
-     overflow-y: auto;
-     height:35vh !important;
-     border:none !important;
- }
+.table-container {
+    max-height: 35vh;
+    overflow-y: auto;
+    height:35vh !important;
+    border:none !important;
+}
 
 .inputTB{
 
@@ -144,8 +150,8 @@ h1 sup .badge {
 
 /* Table Styling */
 table {
-   
-  
+
+
     border-collapse: collapse !important;
     background: #000000 !important;
     color: white !important;
@@ -164,11 +170,11 @@ thead {
 th, td {
     padding: 12px !important;
 
-  /*  border: 1px solid #333 !important;*/
- background: #121212 !important;
- 
+    /*  border: 1px solid #333 !important;*/
+    background: #121212 !important;
 
-  
+
+
 }
 
 /* Alternate Row Colors */
@@ -179,13 +185,13 @@ tbody tr:nth-child(even) {
 /* Hover Effect */
 tbody tr:hover {
     background: #2a2a2a !important;
-  
+
 }
 
 
 tbody td:hover {
     background: #2a2a2a !important;
-  
+
 }
 
 
