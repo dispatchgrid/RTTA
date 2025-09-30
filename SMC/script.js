@@ -1,5 +1,3 @@
-const supabaseUrl = 'https://pgvllzvrngxokdxqyiwv.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBndmxsenZybmd4b2tkeHF5aXd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1ODU4NjMsImV4cCI6MjA3MzE2MTg2M30.LKIOzN_8rFQKU-P0CaQMNftx3dTwSJc23AkiRROKdS4';
 
 
 
