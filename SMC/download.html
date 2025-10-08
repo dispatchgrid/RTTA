@@ -146,7 +146,7 @@
                     if (currentIndex < dt.length) {
                         const rw = dt[currentIndex];
                         const name = rw.name;
-                        const today = "2024/11/13";
+                        const today = getFormattedDate();
                         const tableData = [];
 
                         const teacherRecord = globalData.find(t => t.name === rw.name);
@@ -215,6 +215,13 @@
 
         doc.save("tables.pdf");
     }
+    function getFormattedDate() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}/${month}/${day}`}
+
 </script>
 
 </body>
