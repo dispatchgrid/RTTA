@@ -34,7 +34,7 @@
 
         textarea {
             height: 40vh;
-
+            font-size: 1.2rem !important;
         }
     </style>
 </head>
@@ -49,11 +49,17 @@
 
     <button class="btn btn-primary btn-lg mb-4" id="butto" onclick="butto();">Process</button>
 
-    <button class="btn btn-warning btn-lg mb-4" id="UploadBut" onclick="uploadToSupabase()" style="visibility: hidden;">Upload</button>
+    <button class="btn btn-warning btn-lg mb-4" id="UploadBut" onclick="uploadToSupabase()" style="visibility: hidden;">
+        Upload
+    </button>
 
-    <button onclick="generateReliefTableHTML(); window.open('view.html')" target="_blank" class="btn btn-success btn-lg mb-4" style="visibility: hidden;" id="ViewBut">View</button>
+    <button onclick="generateReliefTableHTML(); window.open('view.html')" target="_blank"
+            class="btn btn-success btn-lg mb-4" style="visibility: hidden;" id="ViewBut">View
+    </button>
 
-    <button onclick="window.open('download.html')" target="_blank" class="btn btn-primary btn-lg mb-4" style="visibility: hidden;" id="DownBut">Download</button>
+    <button onclick="window.open('download.html')" target="_blank" class="btn btn-primary btn-lg mb-4"
+            style="visibility: hidden;" id="DownBut">Download
+    </button>
 
     <h2>Progress : </h2>
     <div class="progress mb-4">
@@ -73,7 +79,8 @@
 <script src="script.js"></script>
 
 <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+
     const supabaseUrl = 'https://pgvllzvrngxokdxqyiwv.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBndmxsenZybmd4b2tkeHF5aXd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1ODU4NjMsImV4cCI6MjA3MzE2MTg2M30.LKIOzN_8rFQKU-P0CaQMNftx3dTwSJc23AkiRROKdS4';
 
@@ -86,9 +93,14 @@
         const mm = now.getMinutes().toString().padStart(2, '0');
         const ss = now.getSeconds().toString().padStart(2, '0');
         const timestamp = `${hh}:${mm}:${ss}`;
-        const stack = Math.floor(Math.random() * 9000) + 1000;
-        const logLine = `${timestamp} - STACK ${stack} - ${message}\n`;
+
+        const logLine = `${timestamp} - ${message}\n`;
         logBox.value += logLine;
+    }
+    function logNormal(message) {
+        const logBox = document.getElementById("cons");
+        logBox.value += message + "\n";
+        logBox.scrollTop = textarea.scrollHeight;
     }
 
     window.butto = function () {
@@ -100,7 +112,7 @@
 
         button.disabled = true;
         button.innerText = "...";
-        logComplex("Relief assignment started");
+        logNormal("Relief Assignment Process Started");
 
         let progress = 0;
         const interval = setInterval(() => {
@@ -110,15 +122,25 @@
             if (progress >= 100) {
                 clearInterval(interval);
 
-                assignReliefForAllAbsentTeachers();
+
+                // ________________________________________________________
+                let startTime = new Date();
+
                 assignReliefForExcludedPairs();
-                const totalPeriods = numberOfPeriods * absentTeachers.length;
-                const covered = Math.floor(Math.random() * totalPeriods * 0.9) + Math.floor(totalPeriods * 0.1);
-                const calculations = Math.floor(Math.random() * 10000) + 5000;
+                assignReliefForAllAbsentTeachers();
 
-                logComplex("Relief assignment finished");
-                logComplex(`Total calculations performed: ${calculations}`);
 
+                // ________________________________________________________
+                let finishTime = new Date();
+                const durationMs = finishTime - startTime;
+
+                logNormal(`Relief Assignment Process Ended (${durationMs}ms)`)
+                logNormal('_____________________________________');
+                logNormal('');
+                logNormal(`Total Absent Teachers  : ${absentTeachers.length}`);
+                logNormal(`Total Periods Covered  : ${actuallyCovered}/${shouldBeCovered} (${((actuallyCovered / shouldBeCovered) * 100).toFixed(2)}%)`);
+                logNormal('_____________________________________');
+                logNormal('');
                 button.innerText = "Processed";
                 button.style.visibility = "hidden";
                 button.style.display = "none";
@@ -138,6 +160,7 @@
         button.disabled = true;
         button.innerText = "Uploading...";
         logComplex("Upload started");
+        let startTime = new Date();
 
         let progress = 0;
         const interval = setInterval(() => {
@@ -150,7 +173,7 @@
         }, 30);
 
         // 🔥 Step 1: Delete all existing rows
-        const { error: deleteError } = await supabase
+        const {error: deleteError} = await supabase
             .from('rttasmcteachers')
             .delete()
             .neq('id', 0); // Deletes all rows (assuming no teacher has id 0)
@@ -179,16 +202,26 @@
         });
 
         // 🚀 Step 3: Upload fresh data
-        const { error: uploadError } = await supabase
+        const {error: uploadError} = await supabase
             .from('rttasmcteachers')
             .insert(payload);
 
         if (uploadError) {
-            logComplex("Upload failed");
+            logNormal("Upload Process Failed");
             console.error(uploadError);
             button.innerText = "Retry Upload";
         } else {
-            logComplex("Upload complete");
+            let finishTime = new Date();
+            const durationMs = finishTime - startTime;
+            logNormal(`Upload Process Ended (${durationMs}ms)`);
+            logNormal('_____________________________________');
+            logNormal('');
+            setTimeout(function () {
+                logNormal('Thank you for using RTTA (Relief Time Table Allocator)');
+                logNormal('Software Donated By K.A.N.N.Sooriyabandara');
+                logNormal('');
+                logNormal('If you encountered any issues, please report them to the developer.');
+            },2000);
             button.innerText = "Uploaded";
             button.style.visibility = "hidden";
             button.style.display = "none";
@@ -239,16 +272,15 @@
     };
 
 
-
-    const exceptionStrings =  ["-","_","PG","Aesth","PA345","PE345","12","13","EXCLUDE","EXCLUDED"];
+    const exceptionStrings = ["-", "_", "PG", "Aesth", "PA345", "PE345", "12", "13", "EXCLUDE", "EXCLUDED"];
     const numberOfPeriods = 8;
     let absentTeachers = [];
     const ignoreSubjects = exceptionStrings;
-    const ignoreClasses = exceptionStrings
-    const lockedTeachers = [81,80,146,19];
+    const ignoreClasses = exceptionStrings;
+    const lockedTeachers = [81, 80, 146, 19];
 
-
-
+    let shouldBeCovered = 0;
+    let actuallyCovered = 0;
 
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
@@ -258,19 +290,17 @@
     } catch (e) {
         console.error('Invalid absent parameter:', rawAbsent);
     }
-    absentTeachers=removeDuplicates(absentTeachers);
+    absentTeachers = removeDuplicates(absentTeachers);
 
     function removeDuplicates(arr) {
         return [...new Set(arr)];
     }
 
 
-
-
-
     let timeTable = [];
 
     formatTimeTables();
+
     function getExcludedPairsFromURL() {
         const params = new URLSearchParams(window.location.search);
         const raw = params.get("exclude");
@@ -281,36 +311,28 @@
             return [parseInt(id), parseInt(period)];
         });
     }
+
     function assignReliefForExcludedPairs() {
         const excludedPairs = getExcludedPairsFromURL(); // [[id, periodIndex], ...]
 
         excludedPairs.forEach(([teacherId, periodIndex]) => {
-            periodIndex=periodIndex-1;
+            periodIndex = periodIndex - 1;
             const teacher = timeTable.find(t => t.id === teacherId);
             if (!teacher) return;
+            if (absentTeachers.includes(teacherId)){
+                console.warn(`Skipping excluded period for absent teacher ${teacher.name} (ID: ${teacherId})`);
+                return false;
+
+            }
             console.log("vrw3tvw3tvw3vtvwt3vtw3vtwvtw4t");
             console.log(teacher);
-            const className = teacher.periods[periodIndex].class;
-            const subjectName = teacher.periods[periodIndex].subject;
-
-            const shouldIgnoreSubject = ignoreSubjects.some(keyword =>
-                subjectName.toUpperCase().includes(keyword.toUpperCase())
-            );
-            const shouldIgnoreClass = ignoreClasses.some(keyword =>
-                className.toUpperCase().includes(keyword.toUpperCase())
-            );
-
-            if (className === "-" || shouldIgnoreSubject || shouldIgnoreClass) {
-                console.warn(`Excluded relief skipped for ${teacherId} period ${periodIndex + 1}`);
-                return;
-            }
-
             const assigned = assignRelief(teacherId, periodIndex + 1); // +1 because assignRelief uses 1-based index
             if (assigned) {
                 console.log(`✅ Relief assigned for excluded period ${periodIndex + 1} of teacher ${teacher.name}`);
             } else {
                 console.warn(`❌ No relief found for excluded period ${periodIndex + 1} of teacher ${teacher.name}`);
             }
+            teacher.periods[periodIndex] = {class: "EXCLUDED", subject: "EXCLUDED"};
         });
     }
 
@@ -325,7 +347,7 @@
                 const className = teacher.periods[i - 1].class;
 
 
-                if (className === "-") continue;
+                if (className === "") continue;
 
                 const assigned = assignRelief(teacherId, i);
 
@@ -349,18 +371,21 @@
         const shouldIgnoreClass = ignoreClasses.some(keyword =>
             classNeeded.toUpperCase().includes(keyword.toUpperCase())
         );
-        if (shouldIgnoreSubject || shouldIgnoreClass) {
+        if (shouldIgnoreSubject || shouldIgnoreClass || classNeeded === "") {
             console.warn(`Relief skipped for period ${periodNumber} due to exclusion:`, {
                 subject: subjectNeeded,
                 class: classNeeded
             });
             return false;
         }
+        const toBeAssignedID = teacher.id;
 
         const rawFreeTeachers = getFreeTeachers(periodNumber);
         const freeTeachers = rawFreeTeachers.filter(teacher =>
+            teacher.id !== toBeAssignedID &&
             !lockedTeachers.includes(teacher.id)
         );
+
 
         const suitableTeachersBySubject = filterTeachersBySubject(subjectNeeded, freeTeachers);
         const suitableTeachersByClass = filterTeachersByClass(classNeeded, freeTeachers);
@@ -378,7 +403,7 @@
         suitableTeachers.forEach(t => uniqueById[t.id] = t);
         suitableTeachers = Object.values(uniqueById);
 
-
+        shouldBeCovered++;
         if (suitableTeachers.length > 0) {
             const selectedTeacher = suitableTeachers[0];
 
@@ -386,7 +411,7 @@
             selectedTeacher.periods[periodNumber - 1].subject = subjectNeeded;
             selectedTeacher.periodStatus[periodNumber - 1] = "R";
             selectedTeacher.working++;
-
+            actuallyCovered++;
             console.log(`✅ Relief assigned to ${selectedTeacher.name} (ID: ${selectedTeacher.id})`);
             return true;
         } else {
@@ -402,10 +427,11 @@
             const period = teacher.periods[periodNumber - 1];
             const isFree = period.class === "-" || period.class === "";
             const isAbsent = absentTeachers.includes(teacher.id);
-            const hasWork = teacher.working > 0;
+            const hasWork = teacher.working > 0 && teacher.working < 6;
             return isFree && !isAbsent && hasWork;
         });
     }
+
     function getFallbackTeachers(freeTeachers) {
         return freeTeachers.sort((a, b) => a.working - b.working); // Least busy first
     }
@@ -424,8 +450,6 @@
     }
 
 
-
-
     function formatTimeTables() {
         const raw = localStorage.getItem("sqlResult");
         if (!raw) return;
@@ -438,12 +462,12 @@
                 for (let i = 1; i <= numberOfPeriods; i++) {
                     const periodClass = item[`P${i} Class`];
                     const periodSubject = item[`P${i} Subject`];
-                    if (periodClass !== '-' ){
-                        if(periodClass !== '') {
+                    if (periodClass !== '-') {
+                        if (periodClass !== '') {
                             workingPeriods++;
                         }
                     }
-                   processedPeriods.push({class: periodClass, subject: periodSubject});
+                    processedPeriods.push({class: periodClass, subject: periodSubject});
                 }
                 let periodStatus = [];
                 for (let i = 0; i < numberOfPeriods; i++) {
@@ -462,13 +486,12 @@
 
             });
 
-        } catch(e) {
+        } catch (e) {
             console.error('Failed to parse stored SQL result:', e);
             return [];
         }
     }
 </script>
-
 
 
 <script>
