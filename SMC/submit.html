@@ -74,6 +74,58 @@
 <script src="script.js"></script>
 
 <script>
+    document.getElementById('csvFile').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            const lines = event.target.result.split(/\r?\n/).filter(line => line.trim() !== '');
+            const headers = lines[0].split(',');
+
+            const departmentIndex = headers.indexOf('Department');
+            const checkInIndex = headers.indexOf('Check-In');
+            const personIdIndex = headers.indexOf('Person ID');
+
+            const filteredRows = [headers]; // include header row
+            const cleanedPersonIds = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const row = lines[i].split(',');
+                if (row[departmentIndex] === 'Teachers' && row[checkInIndex] === '-') {
+                    filteredRows.push(row);
+
+                    const rawId = row[personIdIndex];
+                    const cleanedId = rawId.replace(/'/g, '');
+                    cleanedPersonIds.push(cleanedId);
+                }
+            }
+
+            console.log("Cleaned Person IDs:", cleanedPersonIds);
+            for(const teacherID of cleanedPersonIds){
+                var teacher = getTeacherById(resultArray, teacherID);
+                if (teacher) {
+                    absent.push(teacher.ID);
+                    document.getElementById("lis").innerHTML += `
+                <tr id="row-${teacherID}">
+                    <td>${teacherID}</td>
+                    <td>${teacher.Name}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="removeRow(${teacherID})">Remove</button></td>
+                </tr>
+            `;
+                    scrollToBottom();
+                    document.getElementById("textField").value = "";
+                }
+            }
+
+        };
+
+        reader.readAsText(file);
+    });
+</script>
+
+
+<script>
     const resultArray = getStoredSQLResult();
 
     function getStoredSQLResult(storageKey = 'sqlResult') {
