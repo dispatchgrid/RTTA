@@ -1,518 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <link href="style.css" rel="stylesheet">
-    <title>Relief time-table genarator</title>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://code.jquery.com/jquery-1.12.1.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Enter absent teachers</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-
-    <link rel="stylesheet" href="style.css">
+    <script src="https://code.jquery.com/jquery-1.12.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        body {
-            background-color: #343a40;
-            color: #ffffff;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            margin-top: 1%;
-            overflow-y: hidden;
+        .table-container {
+            max-height: 35vh;
+            overflow-y: auto;
         }
 
-        .progress {
-            height: 30px;
-            /* Increased height */
-        }
-
-        .progress-bar {
-            font-size: 1.5rem;
-            /* Larger font size */
-        }
-
-        textarea {
-            height: 40vh;
-            font-size: 1.2rem !important;
-        }
-        .footer-note {
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            font-size: 1rem;
-            color: #ccc;
-            background: #2a2a2a;
+        table {
             width: 100%;
-            padding: 10px;
         }
 
+        th, td {
+            white-space: nowrap;
+        }
+
+        th:nth-child(2), td:nth-child(2) {
+            width: 100%;
+        }
     </style>
 </head>
-
 <body>
-<div class="container position-relative" style="padding-bottom: 60px;">
+<div class="container">
     <div class="header-container" style="text-align: center;">
         <h1 style="text-align:center; position: relative; display: inline-block;">RTTA</h1>
-        <h2 style="text-align:center;">Processor</h2>
+        <h2 style="text-align:center;">Data Entry</h2>
+
     </div>
+    <div class="mb-3">
+        <label for="textField" class="form-label">Enter absentee's ID</label>
+        <div class="row g-2">
+            <div class="col-md-10">
+                <input onkeyup="typed(event);" type="text" placeholder="Enter ID" class="form-control" id="textField">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100" style="padding:10px" onclick="document.getElementById('csvFile').click();">
+                    Upload CSV
+                </button>
+                <input type="file" id="csvFile" accept=".csv" style="display: none;">
+            </div>
+        </div>
 
-    <button class="btn btn-primary btn-lg mb-4" id="butto" onclick="butto();">Process</button>
-
-    <button class="btn btn-warning btn-lg mb-4" id="UploadBut" onclick="uploadToSupabase()" style="visibility: hidden;">
-        Upload
-    </button>
-
-    <button onclick="generateReliefTableHTML(); window.open('view.html')" target="_blank"
-            class="btn btn-success btn-lg mb-4" style="visibility: hidden;" id="ViewBut">View
-    </button>
-
-    <button onclick="window.open('download.html')" target="_blank" class="btn btn-primary btn-lg mb-4"
-            style="visibility: hidden;" id="DownBut">Download
-    </button>
-
-    <h2>Progress : </h2>
-    <div class="progress mb-4">
-        <div class="progress-bar bg-info" id="pro" role="progressbar" style="width: 0%" aria-valuenow="50"
-             aria-valuemin="0" aria-valuemax="100">50%
+        <label type="text" class="form-control" id="textField2"
+               style="background: transparent;padding-left: 0px;border: transparent;color: white;"
+               value="Name will be here" readonly></label>
+        <p>Press 'Enter' to add</p>
+        <br>
+        <br>
+        <h4>Generated list :</h4>
+        <div class="table-container">
+            <table class="table table-hover table-dark inputTB">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody id="lis"></tbody>
+            </table>
         </div>
     </div>
 
-    <h2>Logs : </h2>
-    <textarea class="form-control" id="cons" rows="5" placeholder="Logs will appear here" readonly></textarea>
+    <button type="button" class="btn btn-primary" onclick="done();">Done</button>
 </div>
-
-<!-- Fixed footer note -->
-<div class="footer-note">
-    Software Donated By K.A.N.N.Sooriyabandara
-</div>
-
-
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-</body>
 <script src="script.js"></script>
 
-<script type="module">
-    import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+<script>
+    document.getElementById('csvFile').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
 
-    const supabaseUrl = 'https://pgvllzvrngxokdxqyiwv.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBndmxsenZybmd4b2tkeHF5aXd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1ODU4NjMsImV4cCI6MjA3MzE2MTg2M30.LKIOzN_8rFQKU-P0CaQMNftx3dTwSJc23AkiRROKdS4';
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            const lines = event.target.result.split(/\r?\n/).filter(line => line.trim() !== '');
+            const headers = lines[0].split(',');
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+            const departmentIndex = headers.indexOf('Department');
+            const checkInIndex = headers.indexOf('Check-In');
+            const personIdIndex = headers.indexOf('Person ID');
 
-    function logComplex(message) {
-        const logBox = document.getElementById("cons");
-        const now = new Date();
-        const hh = now.getHours().toString().padStart(2, '0');
-        const mm = now.getMinutes().toString().padStart(2, '0');
-        const ss = now.getSeconds().toString().padStart(2, '0');
-        const timestamp = `${hh}:${mm}:${ss}`;
+            const filteredRows = [headers]; // include header row
+            const cleanedPersonIds = [];
 
-        const logLine = `${timestamp} - ${message}\n`;
-        logBox.value += logLine;
-    }
-    function logNormal(message) {
-        const logBox = document.getElementById("cons");
-        logBox.value += message + "\n";
-        logBox.scrollTop = textarea.scrollHeight;
-    }
+            for (let i = 1; i < lines.length; i++) {
+                const row = lines[i].split(',');
+                if (row[departmentIndex] === 'Teachers' && row[checkInIndex] === '-') {
+                    filteredRows.push(row);
 
-    window.butto = function () {
-        const button = document.getElementById("butto");
-        const progressBar = document.getElementById("pro");
-        const viewButton = document.getElementById("ViewBut");
-        const downloadButton = document.getElementById("DownBut");
-        const uploadButton = document.getElementById("UploadBut");
-
-        button.disabled = true;
-        button.innerText = "...";
-        logNormal("Relief Assignment Process Started");
-
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += 1;
-            progressBar.style.width = `${progress}%`;
-            progressBar.innerText = `${progress}%`;
-            if (progress >= 100) {
-                clearInterval(interval);
-
-
-                // ________________________________________________________
-                let startTime = new Date();
-
-                assignReliefForExcludedPairs();
-                assignReliefForAllAbsentTeachers();
-
-
-                // ________________________________________________________
-                let finishTime = new Date();
-                const durationMs = finishTime - startTime;
-
-                logNormal(`Relief Assignment Process Ended (${durationMs}ms)`)
-                logNormal('_____________________________________');
-                logNormal('');
-                logNormal(`Total Absent Teachers  : ${absentTeachers.length}`);
-                logNormal(`Total Periods Covered  : ${actuallyCovered}/${shouldBeCovered} (${((actuallyCovered / shouldBeCovered) * 100).toFixed(2)}%)`);
-                logNormal('_____________________________________');
-                logNormal('');
-                button.innerText = "Processed";
-                button.style.visibility = "hidden";
-                button.style.display = "none";
-
-                viewButton.style.visibility = "visible";
-
-                uploadButton.style.visibility = "visible";
-            }
-        }, 30);
-    };
-
-    window.uploadToSupabase = async function () {
-        const button = document.getElementById("UploadBut");
-        const progressBar = document.getElementById("pro");
-        const downloadButton = document.getElementById("DownBut");
-
-        button.disabled = true;
-        button.innerText = "Uploading...";
-        logComplex("Upload started");
-        let startTime = new Date();
-
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += 2;
-            progressBar.style.width = `${progress}%`;
-            progressBar.innerText = `${progress}%`;
-            if (progress >= 100) {
-                clearInterval(interval);
-            }
-        }, 30);
-
-        // 🔥 Step 1: Delete all existing rows
-        const {error: deleteError} = await supabase
-            .from('rttasmcteachers')
-            .delete()
-            .neq('id', 0); // Deletes all rows (assuming no teacher has id 0)
-
-        if (deleteError) {
-            logComplex("Delete failed");
-            console.error(deleteError);
-            button.innerText = "Retry Upload";
-            button.disabled = false;
-            return;
-        }
-
-        // ✅ Step 2: Prepare fresh data
-        const payload = timeTable.map(t => {
-            const data = {
-                id: t.id,
-                name: t.name,
-                working: t.working
-            };
-            for (let i = 0; i < numberOfPeriods; i++) {
-                data[`p${i + 1}_class`] = t.periods[i].class;
-                data[`p${i + 1}_subject`] = t.periods[i].subject;
-                data[`p${i + 1}_status`] = t.periodStatus[i];
-            }
-            return data;
-        });
-
-        // 🚀 Step 3: Upload fresh data
-        const {error: uploadError} = await supabase
-            .from('rttasmcteachers')
-            .insert(payload);
-
-        if (uploadError) {
-            logNormal("Upload Process Failed");
-            console.error(uploadError);
-            button.innerText = "Retry Upload";
-        } else {
-            let finishTime = new Date();
-            const durationMs = finishTime - startTime;
-            logNormal(`Upload Process Ended (${durationMs}ms)`);
-            logNormal('_____________________________________');
-            logNormal('');
-            setTimeout(function () {
-                logNormal('Thank you for using RTTA (Relief Time Table Allocator)');
-                logNormal('Software Donated By K.A.N.N.Sooriyabandara');
-                logNormal('');
-                logNormal('If you encountered any issues, please report them to the developer.');
-            },2000);
-            button.innerText = "Uploaded";
-            button.style.visibility = "hidden";
-            button.style.display = "none";
-            downloadButton.style.visibility = "visible";
-        }
-
-        button.disabled = false;
-    };
-
-
-    window.generateReliefTableHTML = function () {
-        let html = `<table id="myTable" class="table table-hover table-dark">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Period 1</th>
-                <th>Period 2</th>
-                <th>Period 3</th>
-                <th>Period 4</th>
-                <th>Period 5</th>
-                <th>Period 6</th>
-                <th>Period 7</th>
-                <th>Period 8</th>
-            </tr>
-        </thead>
-        <tbody>`;
-
-        timeTable.forEach(teacher => {
-            html += `<tr>
-            <td>${teacher.id}</td>
-            <td>${teacher.name}</td>`;
-
-            for (let i = 0; i < numberOfPeriods; i++) {
-                if (teacher.periodStatus[i] === "R") {
-                    const p = teacher.periods[i];
-                    html += `<td>${p.class}<br>${p.subject}</td>`;
-                } else {
-                    html += `<td>-<br>-</td>`;
+                    const rawId = row[personIdIndex];
+                    const cleanedId = rawId.replace(/'/g, '');
+                    cleanedPersonIds.push(cleanedId);
                 }
             }
 
-            html += `</tr>`;
-        });
-
-        html += `</tbody></table>`;
-        localStorage.setItem("AB", html);
-    };
-
-
-    const exceptionStrings = ["-", "_", "PG", "Aesth", "PA345", "PE345", "12", "13", "EXCLUDE", "EXCLUDED"];
-    const numberOfPeriods = 8;
-    let absentTeachers = [];
-    const ignoreSubjects = exceptionStrings;
-    const ignoreClasses = exceptionStrings;
-    const lockedTeachers = [81, 80, 146, 19];
-
-    let shouldBeCovered = 0;
-    let actuallyCovered = 0;
-
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-    const rawAbsent = urlParams.get('absent');
-    try {
-        absentTeachers = JSON.parse(rawAbsent).map(Number);
-    } catch (e) {
-        console.error('Invalid absent parameter:', rawAbsent);
-    }
-    absentTeachers = removeDuplicates(absentTeachers);
-
-    function removeDuplicates(arr) {
-        return [...new Set(arr)];
-    }
-
-
-    let timeTable = [];
-
-    formatTimeTables();
-
-    function getExcludedPairsFromURL() {
-        const params = new URLSearchParams(window.location.search);
-        const raw = params.get("exclude");
-        if (!raw) return [];
-
-        return raw.split(",").map(pair => {
-            const [id, period] = pair.split(":");
-            return [parseInt(id), parseInt(period)];
-        });
-    }
-
-    function assignReliefForExcludedPairs() {
-        const excludedPairs = getExcludedPairsFromURL(); // [[id, periodIndex], ...]
-
-        excludedPairs.forEach(([teacherId, periodIndex]) => {
-            periodIndex = periodIndex - 1;
-            const teacher = timeTable.find(t => t.id === teacherId);
-            if (!teacher) return;
-            if (absentTeachers.includes(teacherId)){
-                console.warn(`Skipping excluded period for absent teacher ${teacher.name} (ID: ${teacherId})`);
-                return false;
-
-            }
-            console.log("vrw3tvw3tvw3vtvwt3vtw3vtwvtw4t");
-            console.log(teacher);
-            const assigned = assignRelief(teacherId, periodIndex + 1); // +1 because assignRelief uses 1-based index
-            if (assigned) {
-                console.log(`✅ Relief assigned for excluded period ${periodIndex + 1} of teacher ${teacher.name}`);
-            } else {
-                console.warn(`❌ No relief found for excluded period ${periodIndex + 1} of teacher ${teacher.name}`);
-            }
-            teacher.periods[periodIndex] = {class: "EXCLUDED", subject: "EXCLUDED"};
-        });
-    }
-
-
-    function assignReliefForAllAbsentTeachers() {
-        absentTeachers.forEach(teacherId => {
-            const teacher = timeTable.find(t => t.id === teacherId);
-            if (!teacher) return;
-
-            for (let i = 1; i <= numberOfPeriods; i++) {
-
-                const className = teacher.periods[i - 1].class;
-
-
-                if (className === "") continue;
-
-                const assigned = assignRelief(teacherId, i);
-
-            }
-        });
-    }
-
-
-    function assignRelief(teacherId, periodNumber) {
-        let reliefAssignments = [];
-        const teacher = timeTable.find(t => t.id === teacherId);
-        if (!teacher) return false;
-
-        const subjectNeeded = teacher.periods[periodNumber - 1].subject;
-        const classNeeded = teacher.periods[periodNumber - 1].class;
-
-
-        const shouldIgnoreSubject = ignoreSubjects.some(keyword =>
-            subjectNeeded.toUpperCase().includes(keyword.toUpperCase())
-        );
-        const shouldIgnoreClass = ignoreClasses.some(keyword =>
-            classNeeded.toUpperCase().includes(keyword.toUpperCase())
-        );
-        if (shouldIgnoreSubject || shouldIgnoreClass || classNeeded === "") {
-            console.warn(`Relief skipped for period ${periodNumber} due to exclusion:`, {
-                subject: subjectNeeded,
-                class: classNeeded
-            });
-            return false;
-        }
-        const toBeAssignedID = teacher.id;
-
-        const rawFreeTeachers = getFreeTeachers(periodNumber);
-        const freeTeachers = rawFreeTeachers.filter(teacher =>
-            teacher.id !== toBeAssignedID &&
-            !lockedTeachers.includes(teacher.id)
-        );
-
-
-        const suitableTeachersBySubject = filterTeachersBySubject(subjectNeeded, freeTeachers);
-        const suitableTeachersByClass = filterTeachersByClass(classNeeded, freeTeachers);
-        const fallbackTeachers = getFallbackTeachers(freeTeachers);
-
-
-        let suitableTeachers = [
-            ...suitableTeachersBySubject,
-            ...suitableTeachersByClass,
-            ...fallbackTeachers
-        ];
-
-
-        const uniqueById = {};
-        suitableTeachers.forEach(t => uniqueById[t.id] = t);
-        suitableTeachers = Object.values(uniqueById);
-
-        shouldBeCovered++;
-        if (suitableTeachers.length > 0) {
-            const selectedTeacher = suitableTeachers[0];
-
-            selectedTeacher.periods[periodNumber - 1].class = classNeeded;
-            selectedTeacher.periods[periodNumber - 1].subject = subjectNeeded;
-            selectedTeacher.periodStatus[periodNumber - 1] = "R";
-            selectedTeacher.working++;
-            actuallyCovered++;
-            console.log(`✅ Relief assigned to ${selectedTeacher.name} (ID: ${selectedTeacher.id})`);
-            return true;
-        } else {
-
-
-            console.warn(`❌ No suitable teacher found for period ${periodNumber} of teacher ID ${teacherId}`);
-            return false;
-        }
-    }
-
-    function getFreeTeachers(periodNumber) {
-        return timeTable.filter(teacher => {
-            const period = teacher.periods[periodNumber - 1];
-            const isFree = period.class === "-" || period.class === "";
-            const isAbsent = absentTeachers.includes(teacher.id);
-            const hasWork = teacher.working > 0 && teacher.working < 6;
-            return isFree && !isAbsent && hasWork;
-        });
-    }
-
-    function getFallbackTeachers(freeTeachers) {
-        return freeTeachers.sort((a, b) => a.working - b.working); // Least busy first
-    }
-
-    function filterTeachersByClass(classNeeded, freeTeachers) {
-        return freeTeachers
-            .filter(teacher => teacher.periods.some(p => p.class === classNeeded))
-            .sort((a, b) => a.working - b.working); // Least busy first
-    }
-
-
-    function filterTeachersBySubject(subjectNeeded, freeTeachers) {
-        return freeTeachers
-            .filter(teacher => teacher.periods.some(p => p.subject === subjectNeeded))
-            .sort((a, b) => a.working - b.working);
-    }
-
-
-    function formatTimeTables() {
-        const raw = localStorage.getItem("sqlResult");
-        if (!raw) return;
-        try {
-            const parsed = JSON.parse(raw);
-            parsed.forEach(function (item) {
-                let processedPeriods = [];
-                let workingPeriods = 0;
-
-                for (let i = 1; i <= numberOfPeriods; i++) {
-                    const periodClass = item[`P${i} Class`];
-                    const periodSubject = item[`P${i} Subject`];
-                    if (periodClass !== '-') {
-                        if (periodClass !== '') {
-                            workingPeriods++;
-                        }
-                    }
-                    processedPeriods.push({class: periodClass, subject: periodSubject});
+            console.log("Cleaned Person IDs:", cleanedPersonIds);
+            for(const teacherID of cleanedPersonIds){
+                var teacher = getTeacherById(resultArray, teacherID);
+                if (teacher) {
+                    absent.push(teacher.ID);
+                    document.getElementById("lis").innerHTML += `
+                <tr id="row-${teacherID}">
+                    <td>${teacherID}</td>
+                    <td>${teacher.Name}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="removeRow(${teacherID})">Remove</button></td>
+                </tr>
+            `;
+                    scrollToBottom();
+                    document.getElementById("textField").value = "";
                 }
-                let periodStatus = [];
-                for (let i = 0; i < numberOfPeriods; i++) {
-                    periodStatus.push("N");
-                }
+            }
 
-                const entry = {
-                    id: item.ID,
-                    name: item.Name,
-                    periods: processedPeriods,
-                    working: workingPeriods,
-                    periodStatus: periodStatus
-                };
+        };
 
-                timeTable.push(entry);
-
-            });
-
-        } catch (e) {
-            console.error('Failed to parse stored SQL result:', e);
-            return [];
-        }
-    }
+        reader.readAsText(file);
+    });
 </script>
 
 
 <script>
+    const resultArray = getStoredSQLResult();
 
+    function getStoredSQLResult(storageKey = 'sqlResult') {
+        const raw = localStorage.getItem(storageKey);
+        if (!raw) return [];
+        try {
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : [parsed];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function getTeacherById(data, teacherId) {
+        teacherId = parseInt(teacherId);
+        return data.find(teacher => teacher.ID === teacherId) || null;
+    }
+
+    var absent = [];
+
+
+
+
+
+    function typed(event) {
+        const teacherId = document.getElementById("textField").value;
+        var teacher = getTeacherById(resultArray, teacherId);
+        if (teacher) {
+            document.getElementById("textField2").innerHTML = teacher.Name;
+        } else if (teacherId === "") {
+            document.getElementById("textField2").innerHTML = "";
+        } else {
+            document.getElementById("textField2").innerHTML = `<span style="color:red;">Invalid ID</span`;
+        }
+        if (event.which === 13 && teacher) {
+            absent.push(teacher.ID);
+            document.getElementById("lis").innerHTML += `
+                <tr id="row-${teacherId}">
+                    <td>${teacherId}</td>
+                    <td>${teacher.Name}</td>
+                    <td><button class="btn btn-danger btn-sm" onclick="removeRow(${teacherId})">Remove</button></td>
+                </tr>
+            `;
+            scrollToBottom();
+            document.getElementById("textField").value = "";
+        }
+    }
+
+    function removeRow(teacherId) {
+        let row = document.getElementById("row-" + teacherId);
+        if (row) row.remove();
+    }
+
+    function getFirstColumnData() {
+        let data = [];
+        document.querySelectorAll("#lis tr td:first-child").forEach(td => {
+            data.push(td.innerText);
+        });
+        return data;
+    }
+
+    function scrollToBottom() {
+        let container = document.querySelector(".table-container");
+        container.scrollTop = container.scrollHeight;
+    }
+
+    function done() {
+        window.location = "exclude.html?absent=" + arrayToJsonAndUrlParam(getFirstColumnData());
+    }
+
+    function arrayToJsonAndUrlParam(array) {
+        const jsonString = JSON.stringify(array);
+        const urlParam = encodeURIComponent(jsonString);
+        return urlParam;
+    }
 </script>
+</body>
+<script src="script.js"></script>
 </html>

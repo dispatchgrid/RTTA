@@ -36,7 +36,18 @@
     </div>
     <div class="mb-3">
         <label for="textField" class="form-label">Enter absentee's ID</label>
-        <input onkeyup="typed(event);" type="text" placeholder="Enter ID" class="form-control" id="textField">
+        <div class="row g-2">
+            <div class="col-md-10">
+                <input onkeyup="typed(event);" type="text" placeholder="Enter ID" class="form-control" id="textField">
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100" style="padding:10px" onclick="document.getElementById('csvFile').click();">
+                    Upload CSV
+                </button>
+                <input type="file" id="csvFile" accept=".csv" style="display: none;">
+            </div>
+        </div>
+
         <label type="text" class="form-control" id="textField2"
                style="background: transparent;padding-left: 0px;border: transparent;color: white;"
                value="Name will be here" readonly></label>
@@ -57,6 +68,7 @@
             </table>
         </div>
     </div>
+
     <button type="button" class="btn btn-primary" onclick="done();">Done</button>
 </div>
 <script src="script.js"></script>
