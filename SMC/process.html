@@ -33,13 +33,91 @@
         }
 
         textarea {
+
+        }
+
+        #log {
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        #logContainer {
             height: 40vh;
             font-size: 1.2rem !important;
+            background: #181818 !important;
+            border: 1px solid #333 !important;
+            resize: none !important;
+            border-radius: 8px !important;
+            padding: 10px !important;
+            width: 100% !important;
+            font-family: monospace;
+            overflow-y: auto; /* 🔥 Enables vertical scrolling */
         }
+
+
+        @keyframes logFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .log-entry {
+            background: #202020;
+            color: #ffffff;
+            margin: 0;
+            padding: 8px 12px;
+            border-left: 4px solid #444;
+            font-size: 1rem;
+            font-family: monospace;
+            transition: background 0.3s ease;
+            white-space: pre-wrap;
+            border-bottom: 1px solid #333;
+
+            /* 🎬 Animation */
+            animation: logFadeIn 0.4s ease-out;
+        }
+
+
+
+        .log-entry.success {
+            border-left-color: #4caf50; /* Green for success/info */
+        }
+
+        .log-entry.none {
+            border-left-color: rgba(100, 100, 100, 0); /* Green for success/info */
+
+        }
+
+        .log-entry.info {
+            border-left-color: #5d5d5d; /* Green for success/info */
+        }
+
+        .log-entry.warn {
+            border-left-color: #ff9800; /* Orange for warnings */
+        }
+
+        .log-entry.error {
+            border-left-color: #f44336; /* Red for errors */
+        }
+
+        .log-entry.empty {
+            text-align: center;
+            background: rgba(68, 68, 68, 0);
+            border-left-color: rgba(244, 67, 54, 0); /* Red for errors */
+            border-bottom: 1px solid rgba(51, 51, 51, 0);
+        }
+
+
     </style>
 </head>
 
 <body>
+
 <div class="container">
     <div class="header-container" style="text-align: center;">
         <h1 style="text-align:center; position: relative; display: inline-block;">RTTA</h1>
@@ -70,7 +148,10 @@
     </div>
     <br>
     <h4>Logs</h4>
-    <textarea class="form-control" id="cons" rows="5" placeholder="Logs will appear here" readonly></textarea>
+    <div id="logContainer">
+        <div id="log"></div>
+    </div>
+
 </div>
 
 
@@ -78,7 +159,6 @@
 
 </body>
 <script src="script.js"></script>
-
 <script type="module">
     import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
@@ -87,21 +167,17 @@
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    function logComplex(message) {
-        const logBox = document.getElementById("cons");
-        const now = new Date();
-        const hh = now.getHours().toString().padStart(2, '0');
-        const mm = now.getMinutes().toString().padStart(2, '0');
-        const ss = now.getSeconds().toString().padStart(2, '0');
-        const timestamp = `${hh}:${mm}:${ss}`;
+    function addLog(message, type = "none") {
+        const logDiv = document.getElementById('log');
+        if (!logDiv) return;
 
-        const logLine = `${timestamp} - ${message}\n`;
-        logBox.value += logLine;
-    }
-    function logNormal(message) {
-        const logBox = document.getElementById("cons");
-        logBox.value += message + "\n";
-        logBox.scrollTop = logBox.scrollHeight;
+        const entry = document.createElement('div');
+        entry.className = `log-entry ${type}`;
+        entry.innerHTML = `${message}`;
+        logDiv.appendChild(entry);
+
+        // Optional: Auto-scroll to latest log
+        logDiv.scrollTop = logDiv.scrollHeight;
     }
 
     window.butto = function () {
@@ -113,7 +189,7 @@
 
         button.disabled = true;
         button.innerText = "...";
-        logNormal("Relief Assignment Process Started");
+        addLog("Relief Assignment Process Started", 'info');
 
         let progress = 0;
         const interval = setInterval(() => {
@@ -135,13 +211,13 @@
                 let finishTime = new Date();
                 const durationMs = finishTime - startTime;
 
-                logNormal(`Relief Assignment Process Ended (${durationMs}ms)`)
-                logNormal('_____________________________________');
-                logNormal('');
-                logNormal(`Total Absent Teachers  : ${absentTeachers.length}`);
-                logNormal(`Total Periods Covered  : ${actuallyCovered}/${shouldBeCovered} (${((actuallyCovered / shouldBeCovered) * 100).toFixed(2)}%)`);
-                logNormal('_____________________________________');
-                logNormal('');
+                addLog(`Relief Assignment Process Ended (${durationMs}ms)`, 'success')
+                addLog(
+                    `<center><strong>Information Summary</strong></center><br>Total Absent Teachers : ${absentTeachers.length}<br>Total Periods Covered : ${actuallyCovered}/${shouldBeCovered} (${((actuallyCovered / shouldBeCovered) * 100).toFixed(2)}%)<br><br><strong>Assignment Breakdown</strong><br>\tExact Subject   : ${type1AssignmentCount}<br>\tCognate Subject : ${type2AssignmentCount}<br>\tClass Match     : ${type3AssignmentCount}<br>\tFallback Case   : ${type4AssignmentCount}`,
+                    'warn'
+                );
+                addLog(``, "empty");
+
                 button.innerText = "Processed";
                 button.style.visibility = "hidden";
                 button.style.display = "none";
@@ -160,7 +236,7 @@
 
         button.disabled = true;
         button.innerText = "Uploading...";
-        logNormal("Upload started");
+        addLog("Upload started", 'info');
         let startTime = new Date();
 
         let progress = 0;
@@ -180,7 +256,7 @@
             .neq('id', 0); // Deletes all rows (assuming no teacher has id 0)
 
         if (deleteError) {
-            logComplex("Delete failed");
+            addLog("Delete failed", 'error');
             console.error(deleteError);
             button.innerText = "Retry Upload";
             button.disabled = false;
@@ -208,21 +284,23 @@
             .insert(payload);
 
         if (uploadError) {
-            logNormal("Upload Process Failed");
+            addLog("Upload Process Failed", 'erro');
             console.error(uploadError);
             button.innerText = "Retry Upload";
         } else {
             let finishTime = new Date();
             const durationMs = finishTime - startTime;
-            logNormal(`Upload Process Ended (${durationMs}ms)`);
-            logNormal('_____________________________________');
-            logNormal('');
+            addLog(`Upload Process Ended (${durationMs}ms)`, 'success');
             setTimeout(function () {
-                logNormal('Thank you for using RTTA (Relief Time Table Allocator)');
-                logNormal('Software Donated By K.A.N.N.Sooriyabandara');
-                logNormal('');
-                logNormal('If you encountered any issues, please report them to the developer.');
-            },2000);
+                addLog(``, "empty");
+                addLog(
+                    `Thank you for using <strong>RTTA</strong> (Relief Time Table Allocator)<br>
+   <em>Software donated by K.A.N.N. Sooriyabandara</em><br>
+   If you encounter any issues, please report them to the developer.`,
+                    "info"
+                );
+
+            }, 2000);
             button.innerText = "Uploaded";
             button.style.visibility = "hidden";
             button.style.display = "none";
@@ -279,6 +357,15 @@
     const ignoreSubjects = exceptionStrings;
     const ignoreClasses = exceptionStrings;
     const lockedTeachers = [81, 80, 146, 19];
+    const subjectGroups = [
+        ['Scie', 'Maths'],
+        ['Sinha', 'Budd', 'History'],
+        ['Drama', 'Dancing'],
+        ['Music', 'WMusic', 'Art'],
+        ['civcs', 'Geo', 'History']
+        // Add more groups as needed
+    ];
+
 
     let shouldBeCovered = 0;
     let actuallyCovered = 0;
@@ -320,16 +407,16 @@
             periodIndex = periodIndex - 1;
             const teacher = timeTable.find(t => t.id === teacherId);
             if (!teacher) return;
-            if (absentTeachers.includes(teacherId)){
+            if (absentTeachers.includes(teacherId)) {
                 console.warn(`Skipping excluded period for absent teacher ${teacher.name} (ID: ${teacherId})`);
                 return false;
 
             }
-            console.log("vrw3tvw3tvw3vtvwt3vtw3vtwvtw4t");
-            console.log(teacher);
+            //console.log("vrw3tvw3tvw3vtvwt3vtw3vtwvtw4t");
+            //console.log(teacher);
             const assigned = assignRelief(teacherId, periodIndex + 1); // +1 because assignRelief uses 1-based index
             if (assigned) {
-                console.log(`✅ Relief assigned for excluded period ${periodIndex + 1} of teacher ${teacher.name}`);
+                //console.log(`✅ Relief assigned for excluded period ${periodIndex + 1} of teacher ${teacher.name}`);
             } else {
                 console.warn(`❌ No relief found for excluded period ${periodIndex + 1} of teacher ${teacher.name}`);
             }
@@ -355,6 +442,11 @@
             }
         });
     }
+
+    var type1AssignmentCount = 0;
+    var type2AssignmentCount = 0;
+    var type3AssignmentCount = 0;
+    var type4AssignmentCount = 0;
 
 
     function assignRelief(teacherId, periodNumber) {
@@ -389,17 +481,44 @@
 
 
         const suitableTeachersBySubject = filterTeachersBySubject(subjectNeeded, freeTeachers);
+        const suitableTeachersByGroups = filterTeachersBySubjectGroup(subjectNeeded, freeTeachers, subjectGroups);
         const suitableTeachersByClass = filterTeachersByClass(classNeeded, freeTeachers);
         const fallbackTeachers = getFallbackTeachers(freeTeachers);
-
-
+        console.log(suitableTeachersByGroups);
+        console.log(suitableTeachersBySubject.length + " : "+suitableTeachersByGroups.length);
         let suitableTeachers = [
             ...suitableTeachersBySubject,
+            ...suitableTeachersByGroups,
             ...suitableTeachersByClass,
             ...fallbackTeachers
         ];
 
+        const assignmentSources = [
+            {array: suitableTeachersBySubject, type: 'type1'},
+            {array: suitableTeachersByGroups, type: 'type2'},
+            {array: suitableTeachersByClass, type: 'type3'},
+            {array: fallbackTeachers, type: 'fallback'}
+        ];
 
+        for (const source of assignmentSources) {
+            if (source.array.length > 0) {
+                switch (source.type) {
+                    case 'type1':
+                        type1AssignmentCount++;
+                        break;
+                    case 'type2':
+                        type2AssignmentCount++;
+                        break;
+                    case 'type3':
+                        type3AssignmentCount++;
+                        break;
+                    case 'fallback':
+                        type4AssignmentCount++;
+                        break;
+                }
+                break; // Stop after the first non-empty array
+            }
+        }
         const uniqueById = {};
         suitableTeachers.forEach(t => uniqueById[t.id] = t);
         suitableTeachers = Object.values(uniqueById);
@@ -413,7 +532,7 @@
             selectedTeacher.periodStatus[periodNumber - 1] = "R";
             selectedTeacher.working++;
             actuallyCovered++;
-            console.log(`✅ Relief assigned to ${selectedTeacher.name} (ID: ${selectedTeacher.id})`);
+            //console.log(`✅ Relief assigned to ${selectedTeacher.name} (ID: ${selectedTeacher.id})`);
             return true;
         } else {
 
@@ -448,6 +567,21 @@
         return freeTeachers
             .filter(teacher => teacher.periods.some(p => p.subject === subjectNeeded))
             .sort((a, b) => a.working - b.working);
+    }
+
+    function filterTeachersBySubjectGroup(subjectNeeded, freeTeachers, subjectGroups) {
+
+        const matchedGroup = subjectGroups.find(group => group.includes(subjectNeeded));
+        console.log("CALLED"+subjectNeeded+subjectGroups)
+        if (!matchedGroup) return [];
+        console.log("CALLED2")
+
+        let matchingTeachers = [];
+        for(const sub of matchedGroup){
+            console.log("Group member: "+sub);
+            matchingTeachers.push(...filterTeachersBySubject(sub, freeTeachers));
+        }
+        return matchingTeachers;
     }
 
 

@@ -12,7 +12,7 @@
     const style = document.createElement('style');
     style.innerHTML = `
     .footer-note {
-    position: absolute;
+    position: fixed; /* 🔄 Changed from absolute to fixed */
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
@@ -22,6 +22,7 @@
     background: #2a2a2a;
     width: 100%;
     padding: 10px;
+    z-index: 1000; /* Optional: ensures it stays above other content */
 }
     `;
     document.head.appendChild(style);
