@@ -83,7 +83,6 @@
         }
 
 
-
         .log-entry.success {
             border-left-color: #4caf50; /* Green for success/info */
         }
@@ -479,20 +478,20 @@
             !lockedTeachers.includes(teacher.id)
         );
 
-
+        console.log(subjectNeeded);
         const suitableTeachersBySubject = filterTeachersBySubject(subjectNeeded, freeTeachers);
         const suitableTeachersByGroups = filterTeachersBySubjectGroup(subjectNeeded, freeTeachers, subjectGroups);
         const suitableTeachersByClass = filterTeachersByClass(classNeeded, freeTeachers);
         const fallbackTeachers = getFallbackTeachers(freeTeachers);
-        console.log(suitableTeachersByGroups);
-        console.log(suitableTeachersBySubject.length + " : "+suitableTeachersByGroups.length);
+        console.log(suitableTeachersBySubject);
+
         let suitableTeachers = [
             ...suitableTeachersBySubject,
             ...suitableTeachersByGroups,
             ...suitableTeachersByClass,
             ...fallbackTeachers
         ];
-
+        console.log(suitableTeachers);
         const assignmentSources = [
             {array: suitableTeachersBySubject, type: 'type1'},
             {array: suitableTeachersByGroups, type: 'type2'},
@@ -519,19 +518,18 @@
                 break; // Stop after the first non-empty array
             }
         }
-        const uniqueById = {};
-        suitableTeachers.forEach(t => uniqueById[t.id] = t);
-        suitableTeachers = Object.values(uniqueById);
-
         shouldBeCovered++;
         if (suitableTeachers.length > 0) {
+            console.log("Suitable teachers found:", suitableTeachers);
             const selectedTeacher = suitableTeachers[0];
-
+            console.log(selectedTeacher);
             selectedTeacher.periods[periodNumber - 1].class = classNeeded;
             selectedTeacher.periods[periodNumber - 1].subject = subjectNeeded;
             selectedTeacher.periodStatus[periodNumber - 1] = "R";
             selectedTeacher.working++;
             actuallyCovered++;
+
+
             //console.log(`✅ Relief assigned to ${selectedTeacher.name} (ID: ${selectedTeacher.id})`);
             return true;
         } else {
@@ -548,7 +546,8 @@
             const isFree = period.class === "-" || period.class === "";
             const isAbsent = absentTeachers.includes(teacher.id);
             const hasWork = teacher.working > 0 && teacher.working < 6;
-            return isFree && !isAbsent && hasWork;
+            const hasTooManyRelief = teacher.periodStatus.filter(status => status === "R").length > 2;
+            return isFree && !isAbsent && hasWork && !hasTooManyRelief;
         });
     }
 
@@ -572,13 +571,13 @@
     function filterTeachersBySubjectGroup(subjectNeeded, freeTeachers, subjectGroups) {
 
         const matchedGroup = subjectGroups.find(group => group.includes(subjectNeeded));
-        console.log("CALLED"+subjectNeeded+subjectGroups)
+
         if (!matchedGroup) return [];
-        console.log("CALLED2")
+
 
         let matchingTeachers = [];
-        for(const sub of matchedGroup){
-            console.log("Group member: "+sub);
+        for (const sub of matchedGroup) {
+
             matchingTeachers.push(...filterTeachersBySubject(sub, freeTeachers));
         }
         return matchingTeachers;

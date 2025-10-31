@@ -120,6 +120,7 @@
             throw new Error('resolvedDay must be a non-empty string');
         }
 
+
         const { data, error } = await supabase
             .from('rttasmcmain')
             .select('*')
@@ -155,7 +156,9 @@
                 const match = dayNames.find(day => day.toLowerCase() === formatted);
 
                 resolvedDay = match || "Invalid day";
+
             }
+
         }
 
     }else if(code === "edit"){
